@@ -8,91 +8,57 @@ import(
 	"fmt"
 )
 
-type Crud interface{
-        Add()
-        Read()
-        Update()
-        Delete()
-}
-
-type Car struct{
-        Id      int
-        Make    int
-        Model   int
-        Year    int
-        Style   int
-}
-
-func (c Car) Add(db *sql.DB){
-//Create a new car and store it to the database
-	sql_additem := `
-        INSERT OR REPLACE INTO Cars(
-		MakeId,
-                ModelId,
-                Year,
-		StyleId
-        ) values(?,?,?,?)
-        `
-
-        stmt, err := db.Prepare(sql_additem)
-        if err != nil{
-		panic(err)
-	}
-        defer stmt.Close()
-
-        _, err = stmt.Exec(c.Make,c.Model,c.Year,c.Style)
-        if err != nil{
-		panic(err)
-	}
-}
-
-func (c Car) Read(){
-/*
-	sql_readall := `
-	SELECT Ma.Make, Mo.Model, C.Year, S.Style
-   	FROM Makes as Ma, Model as Mo, Cars as C, Styles as S
-   	WHERE C.MakeId = Ma.Id 
-   	AND C.ModelId = Mo.Id
-   	AND C.StyleId = S.Id`
-
-        rows, err := db.Query(sql_readall)
-        if err != nil{
-		panic(err)
-	}
-        defer rows.Close()
-
-        for rows.Next() {
-                //var car Car
-                err := rows.Scan(&car., &user.Name, &user.Date)
-                if err != nil{
-			panic(err)
-		}
-                result = append(result, user)
-        }
-        return result
-*/
-}
-
+// Below are the structs
 type Mechanic struct{
         Id           int
         WorkshopName string
         MechanicName string
-        Specialty    int
+        SpecialtyId  int
         Address      string
         Phone        int
 }
 
 type Log struct{
-        Id       int
-        Car      int //TODO: foreign key to the ID of car
-        Mechanic int //Same as above from table mechanic
-        Problem  string
-        Solution string
-        Date     string
-        NextDate bool   //Is there going to be a next appointment?
-        MailDate string //The date of the next appointment
+        Id         int
+        CarId      int
+        MechanicId int
+        Problem    string
+        Solution   string
+        Date       string
+        NextDate   string //The date of the next appointment
 }
 
+type Car struct{
+        Id        int
+        MakeId    int
+        ModelId   int
+        Year      int
+        StyleId   int
+}
+
+type Model struct{
+	Id	int
+	MakeId	int
+	Model	string
+}
+
+//I dont need these yet
+type Make struct{
+	Id	int
+	Make	string
+}
+
+type Style struct{
+	Id	int
+	Style	string
+}
+
+type Specialty struct{
+	Id	  int
+	Specialty string
+}
+
+// Below are the functions to open and create the tables on the DB
 func OpenDB(path string) *sql.DB{
 	db, err := sql.Open("sqlite3", path)
 	if err != nil {
@@ -219,6 +185,7 @@ func CreateAllTables(db *sql.DB){
 	CreateTableLog(db)
 }
 
+// Below are the functions to Fill the catalogs that user do not manage (things that barely change)
 func FillStyleTable(db *sql.DB){
 	styles := []string{"SUV","PickUp","Hatchback","Van","Sedan"}
 	sql_additem := `
@@ -257,12 +224,6 @@ func FillMakesTable(db *sql.DB){
 		_, err = stmt.Exec(m)
 		if err != nil { panic(err) }
 	}
-}
-
-type Model struct{
-	Id	int
-	MakeId	int
-	Model	string
 }
 
 func FillModelTable(db *sql.DB){
@@ -324,10 +285,210 @@ func FillCatalogs(db *sql.DB){
 	FillSpecialtyTable(db)
 }
 
-
+// Below is the function used on the main to create and fill the catalogs
 func CreateFillCatalogs(db *sql.DB){
 	CreateAllTables(db)
 	FillCatalogs(db)
 }
 
+// Below are the methods to manage the items.
+type Crud interface{
+        AddItems()
+        ReadItems()
+        UpdateItems()
+	SearchItmes()
+        DeleteItems()
+}
 
+func (c Car) AddItems(db *sql.DB){
+	sql_additem := `
+        INSERT OR REPLACE INTO Cars(
+		MakeId,
+                ModelId,
+                Year,
+		StyleId
+        ) values((SELECT MakeId FROM Model WHERE Id = ?),?,?,?)
+        `
+
+        stmt, err := db.Prepare(sql_additem)
+        if err != nil{
+		panic(err)
+	}
+        defer stmt.Close()
+
+        _, err = stmt.Exec(c.ModelId,c.ModelId,c.Year,c.StyleId)
+        if err != nil{
+		panic(err)
+	}
+}
+
+func (c Car) ReadItems(db *sql.DB){
+/*
+	sql_readall := `
+	SELECT Ma.Make, Mo.Model, C.Year, S.Style
+   	FROM Makes as Ma, Model as Mo, Cars as C, Styles as S
+   	WHERE C.MakeId = Ma.Id 
+   	AND C.ModelId = Mo.Id
+   	AND C.StyleId = S.Id`
+
+        rows, err := db.Query(sql_readall)
+        if err != nil{
+		panic(err)
+	}
+        defer rows.Close()
+
+        for rows.Next() {
+                //var car Car
+                err := rows.Scan(&car., &user.Name, &user.Date)
+                if err != nil{
+			panic(err)
+		}
+                result = append(result, user)
+        }
+        return result
+*/
+}
+
+func (c Car) UpdateItems(db *sql.DB){
+
+}
+
+func (c Car) SearchItmes(db *sql.DB){
+
+}
+
+func (c Car) DeleteItems(db *sql.DB){
+
+}
+
+//Mechanic methods
+func (m Mechanic) AddItems(db *sql.DB){
+	sql_additem := `
+        INSERT OR REPLACE INTO Mechanic(
+		WorkshopName,
+                MechanicName,
+                SpecialtyId,
+		Address,
+		Phone
+        ) values(?,?,?,?,?)
+        `
+
+        stmt, err := db.Prepare(sql_additem)
+        if err != nil{
+		panic(err)
+	}
+        defer stmt.Close()
+
+        _, err = stmt.Exec(m.WorkshopName, m.MechanicName, m.SpecialtyId, m.Address, m.Phone)
+        if err != nil{
+		panic(err)
+	}
+}
+
+func (m Mechanic) ReadItems(db *sql.DB){
+/*
+	sql_readall := `
+	SELECT Ma.Make, Mo.Model, C.Year, S.Style
+   	FROM Makes as Ma, Model as Mo, Cars as C, Styles as S
+   	WHERE C.MakeId = Ma.Id 
+   	AND C.ModelId = Mo.Id
+   	AND C.StyleId = S.Id`
+
+        rows, err := db.Query(sql_readall)
+        if err != nil{
+		panic(err)
+	}
+        defer rows.Close()
+
+        for rows.Next() {
+                //var car Car
+                err := rows.Scan(&car., &user.Name, &user.Date)
+                if err != nil{
+			panic(err)
+		}
+                result = append(result, user)
+        }
+        return result
+*/
+}
+
+/*func () UpdateItems(db *sql.DB){
+
+}
+
+func () SearchItmes(db *sql.DB){
+
+}
+
+func () DeleteItems(db *sql.DB){
+
+}*/
+
+//Log methods
+func (l Log) AddItems(db *sql.DB){
+	sql_additem := `
+        INSERT OR REPLACE INTO Cars(
+		MakeId,
+                ModelId,
+                Year,
+		StyleId
+        ) values((SELECT MakeId FROM Model WHERE Id = ?),?,?,?)
+        `
+
+        stmt, err := db.Prepare(sql_additem)
+        if err != nil{
+		panic(err)
+	}
+        defer stmt.Close()
+
+        _, err = stmt.Exec()
+        if err != nil{
+		panic(err)
+	}
+}
+
+/* AddDate(<año>,<mes>,<dia>)
+today := time.Now()
+fmt.Println(today)
+oneMonth := today.AddDate(0,1,0) 
+fmt.Println(oneMonth)
+*/
+
+func (l Log) ReadItems(db *sql.DB){
+/*
+	sql_readall := `
+	SELECT Ma.Make, Mo.Model, C.Year, S.Style
+   	FROM Makes as Ma, Model as Mo, Cars as C, Styles as S
+   	WHERE C.MakeId = Ma.Id 
+   	AND C.ModelId = Mo.Id
+   	AND C.StyleId = S.Id`
+
+        rows, err := db.Query(sql_readall)
+        if err != nil{
+		panic(err)
+	}
+        defer rows.Close()
+
+        for rows.Next() {
+                //var car Car
+                err := rows.Scan(&car., &user.Name, &user.Date)
+                if err != nil{
+			panic(err)
+		}
+                result = append(result, user)
+        }
+        return result
+*/
+}
+
+/*func () UpdateItems(db *sql.DB){
+
+}
+
+func () SearchItmes(db *sql.DB){
+
+}
+
+func () DeleteItems(db *sql.DB){
+
+}*/

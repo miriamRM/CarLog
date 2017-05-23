@@ -8,46 +8,6 @@ import(
 	"ProyCarLogs/DbHandle"
 )
 
-/*
-type Crud interface{
-	Add()
-	Read()
-	Update()
-	Delete()
-}
-
-type Car struct{
-	Id	int
-	Make	int
-	Model	int
-	Year	int
-	Style	int
-}
-
-//func (c Car) Add(db *sql.DB){
-//Create a new car and store it to the database
-}//
-
-type Mechanic struct{
-	Id	     int
-	WorkshopName string
-	MechanicName string
-	Specialty    int
-	Address	     string
-	Phone	     int
-}
-
-type Log struct{
-	Id	 int
-	Car	 int //TODO: foreign key to the ID of car
-	Mechanic int //Same as above from table mechanic
-	Problem	 string
-	Solution string
-	Date	 string
-	NextDate bool   //Is there going to be a next appointment?
-	MailDate string //The date of the next appointment
-}*/
-
 func main(){
 	//OpenDB
 	const DBPATH = "./data/CarLog.db"
@@ -56,9 +16,20 @@ func main(){
 
 	//Fill catalogs that user won't manage
 	DbHandle.CreateFillCatalogs(db)
-	vibe := DbHandle.Car{Make: 7, Model: 3, Year: 2010, Style: 3}
-	vibe.Add(db)
+	vibe := DbHandle.Car{ModelId: 3, Year: 2010, StyleId: 3}
+	vibe.AddItems(db)
 
-	intrepid := DbHandle.Car{Make: 1, Model: 2, Year: 2000, Style: 5}
-	intrepid.Add(db)
+	intrepid := DbHandle.Car{ModelId: 2, Year: 2000, StyleId: 5}
+	intrepid.AddItems(db)
+
+	caravan := DbHandle.Car{ModelId: 1, Year: 1996, StyleId: 4}
+	caravan.AddItems(db)
+
+	malibu := DbHandle.Car{ModelId: 7, Year: 2016, StyleId: 5}
+	malibu.AddItems(db)
+
+	manuel := DbHandle.Mechanic{WorkshopName: "Taller Fulanitos",MechanicName: "Manuel", SpecialtyId: 1, Address: "Avenida fulana #123 Col centro", Phone: 1234567}
+	manuel.AddItems(db)
+
+
 }
