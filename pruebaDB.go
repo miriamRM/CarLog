@@ -27,7 +27,7 @@ func CreateTable(db *sql.DB) {
 	}
 }
 
-func StoreItem(db *sql.DB, user Users) {
+func (user Users) StoreItem(db *sql.DB) {
 	sql_additem := `
 	INSERT OR REPLACE INTO users(
 		Name,
@@ -76,10 +76,10 @@ func main(){
 	CreateTable(db)
 
 	mimi := Users{Name: "Miriam"}
-	StoreItem(db, mimi)
+	mimi.StoreItem(db)
 
 	oscar := Users{Name: "Oscar"}
-	StoreItem(db, oscar)
+	oscar.StoreItem(db)
 
 	users := ReadItem(db)
 	for _, user := range users{
