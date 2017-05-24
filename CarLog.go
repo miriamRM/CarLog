@@ -7,6 +7,7 @@ import(
 	//_ "github.com/mattn/go-sqlite3"
 	"ProyCarLogs/DbHandle"
 	"time"
+	"fmt"
 )
 
 func main(){
@@ -32,7 +33,12 @@ func main(){
 	manuel := DbHandle.Mechanic{WorkshopName: "Taller Fulanitos",MechanicName: "Manuel", SpecialtyId: 1, Address: "Avenida fulana #123 Col centro", Phone: 1234567}
 	manuel.AddItems(db)
 
-	//Find the Id from intrepid
+	//Find the Id from all the cars whose model is intrepid
+	cars := intrepid.SearchItems(db)
+	fmt.Println("Id \t Make \t Model \t Year \t Style")
+	for _, car := range cars{
+		fmt.Printf("%v \t %v \t %v \t %v \t %v \n", car.Id, car.MakeStr, car.ModelStr, car.Year, car.StyleStr)
+	}
 
 	date := time.Now()
 

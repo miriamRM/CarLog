@@ -32,9 +32,12 @@ type Log struct{
 type Car struct{
         Id        int
         MakeId    int
+	MakeStr   string
         ModelId   int
+	ModelStr  string
         Year      int
         StyleId   int
+	StyleStr  string
 }
 
 type Model struct{
@@ -323,7 +326,7 @@ func (c Car) AddItems(db *sql.DB){
 	}
 }
 
-func (c Car) ReadItems(db *sql.DB){
+func (c Car) ReadItems(db *sql.DB){ //read all items
 /*
 	sql_readall := `
 	SELECT Ma.Make, Mo.Model, C.Year, S.Style
@@ -354,7 +357,29 @@ func (c Car) UpdateItems(db *sql.DB){
 
 }
 
-func (c Car) SearchItmes(db *sql.DB){
+func (c Car) SearchItems(db *sql.DB) []Car{ //Search only for the ones of the same model
+	sql_readall := `
+	SELECT C.Id, Ma.Make, Mo.Model, C.Year, S.Style
+   	FROM Makes as Ma, Model as Mo, Cars as C, Styles as S
+   	WHERE C.MakeId = Ma.Id 
+   	AND C.ModelId = Mo.Id
+   	AND C.StyleId = S.Id 
+	AND C.ModelId = ?
+	ORDER BY C.Id ASC
+	`
+
+	rows, err := db.Query(sql_readall, c.ModelId)
+	if err != nil { panic(err) }
+	defer rows.Close()
+
+	var result []Car
+	for rows.Next() {
+		var car Car
+		err := rows.Scan(&car.Id, &car.MakeStr, &car.ModelStr, &car.Year, &car.StyleStr)
+		if err != nil { panic(err) }
+		result = append(result, car)
+	}
+	return result
 
 }
 
@@ -413,17 +438,17 @@ func (m Mechanic) ReadItems(db *sql.DB){
 */
 }
 
-/*func () UpdateItems(db *sql.DB){
+func (m Mechanic) UpdateItems(db *sql.DB){
 
 }
 
-func () SearchItmes(db *sql.DB){
+func (m Mechanic) SearchItmes(db *sql.DB){
 
 }
 
-func () DeleteItems(db *sql.DB){
+func (m Mechanic) DeleteItems(db *sql.DB){
 
-}*/
+}
 
 //Log methods
 func (l Log) AddItems(db *sql.DB){
@@ -484,14 +509,16 @@ func (l Log) ReadItems(db *sql.DB){
 */
 }
 
-/*func () UpdateItems(db *sql.DB){
+func (l Log) UpdateItems(db *sql.DB){
 
 }
 
-func () SearchItmes(db *sql.DB){
+func (l Log) SearchItmes(db *sql.DB){
 
 }
 
-func () DeleteItems(db *sql.DB){
+func (l Log) DeleteItems(db *sql.DB){
 
-}*/
+}
+
+
