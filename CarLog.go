@@ -10,6 +10,14 @@ import(
 	"fmt"
 )
 
+func printCars(cars []DbHandle.Car){
+	fmt.Println("Id \t Make \t\t Model \t Year \t Style")
+	for _, c := range cars{
+		fmt.Printf("%v \t %v \t   %v \t %v \t %v \n", c.Id, c.MakeStr, c.ModelStr, c.Year, c.StyleStr)
+	}
+	fmt.Println("")
+}
+
 func main(){
 	//OpenDB
 	const DBPATH = "./data/CarLog.db"
@@ -21,6 +29,8 @@ func main(){
 	vibe := DbHandle.Car{ModelId: 3, Year: 2010, StyleId: 3}
 	vibe.AddItems(db)
 
+
+	//Add Cars to the database
 	intrepid := DbHandle.Car{ModelId: 2, Year: 2000, StyleId: 5}
 	intrepid.AddItems(db)
 
@@ -30,18 +40,20 @@ func main(){
 	malibu := DbHandle.Car{ModelId: 7, Year: 2016, StyleId: 5}
 	malibu.AddItems(db)
 
+	//Find all the cars
+	allCars := DbHandle.ReadAllItems(db)
+	printCars(allCars)
+
+	//Find  all the info from all the cars whose model is the same as the variable
+	intrepids := intrepid.SearchItems(db)
+	printCars(intrepids)
+
+	//Add Mechanics to the database
 	manuel := DbHandle.Mechanic{WorkshopName: "Taller Fulanitos",MechanicName: "Manuel", SpecialtyId: 1, Address: "Avenida fulana #123 Col centro", Phone: 1234567}
 	manuel.AddItems(db)
 
-	//Find the Id from all the cars whose model is intrepid
-	cars := intrepid.SearchItems(db)
-	fmt.Println("Id \t Make \t Model \t Year \t Style")
-	for _, car := range cars{
-		fmt.Printf("%v \t %v \t %v \t %v \t %v \n", car.Id, car.MakeStr, car.ModelStr, car.Year, car.StyleStr)
-	}
-
+	//Add Logs to the database
 	date := time.Now()
-
 	logIntrepid := DbHandle.Log{CarId: 2, MechanicId: 1, Problem: "Intrepid sigue goteando aceite y seguimos sin saber por donde cae la gota", Solution: "Se le cambiaron los empaques de no se que cosa", Date: date , NextDate: date.AddDate(0,0,1)}
 	logIntrepid.AddItems(db)
 

@@ -298,7 +298,7 @@ func CreateFillCatalogs(db *sql.DB){
 // Below are the methods to manage the items.
 type Crud interface{
         AddItems()
-        ReadItems()
+   //     ReadAllItems()
         UpdateItems()
 	SearchItmes()
         DeleteItems()
@@ -326,31 +326,28 @@ func (c Car) AddItems(db *sql.DB){
 	}
 }
 
-func (c Car) ReadItems(db *sql.DB){ //read all items
-/*
+func ReadAllItems(db *sql.DB) []Car{ //read all items
 	sql_readall := `
-	SELECT Ma.Make, Mo.Model, C.Year, S.Style
+	SELECT C.Id, C.MakeId, Ma.Make, C.ModelId, Mo.Model, C.Year, C.StyleId, S.Style
    	FROM Makes as Ma, Model as Mo, Cars as C, Styles as S
    	WHERE C.MakeId = Ma.Id 
    	AND C.ModelId = Mo.Id
-   	AND C.StyleId = S.Id`
+   	AND C.StyleId = S.Id 
+	ORDER BY C.Id ASC
+	`
 
-        rows, err := db.Query(sql_readall)
-        if err != nil{
-		panic(err)
+	rows, err := db.Query(sql_readall)
+	if err != nil { panic(err) }
+	defer rows.Close()
+
+	var result []Car
+	for rows.Next() {
+		var car Car
+		err := rows.Scan(&car.Id, &car.MakeId, &car.MakeStr, &car.ModelId, &car.ModelStr, &car.Year, &car.StyleId, &car.StyleStr)
+		if err != nil { panic(err) }
+		result = append(result, car)
 	}
-        defer rows.Close()
-
-        for rows.Next() {
-                //var car Car
-                err := rows.Scan(&car., &user.Name, &user.Date)
-                if err != nil{
-			panic(err)
-		}
-                result = append(result, user)
-        }
-        return result
-*/
+	return result
 }
 
 func (c Car) UpdateItems(db *sql.DB){
@@ -380,7 +377,6 @@ func (c Car) SearchItems(db *sql.DB) []Car{ //Search only for the ones of the sa
 		result = append(result, car)
 	}
 	return result
-
 }
 
 func (c Car) DeleteItems(db *sql.DB){
@@ -411,7 +407,7 @@ func (m Mechanic) AddItems(db *sql.DB){
 	}
 }
 
-func (m Mechanic) ReadItems(db *sql.DB){
+func (m Mechanic) ReadAllItems(db *sql.DB){
 /*
 	sql_readall := `
 	SELECT Ma.Make, Mo.Model, C.Year, S.Style
@@ -482,7 +478,7 @@ oneMonth := today.AddDate(0,1,0)
 fmt.Println(oneMonth)
 */
 
-func (l Log) ReadItems(db *sql.DB){
+func (l Log) ReadAllItems(db *sql.DB){
 /*
 	sql_readall := `
 	SELECT Ma.Make, Mo.Model, C.Year, S.Style
