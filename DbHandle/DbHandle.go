@@ -6,6 +6,7 @@ import(
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
 	"fmt"
+	"time"
 )
 
 // Below are the structs
@@ -24,8 +25,8 @@ type Log struct{
         MechanicId int
         Problem    string
         Solution   string
-        Date       string
-        NextDate   string //The date of the next appointment
+        Date       time.Time
+        NextDate   time.Time //The date of the next appointment
 }
 
 type Car struct{
@@ -427,12 +428,14 @@ func () DeleteItems(db *sql.DB){
 //Log methods
 func (l Log) AddItems(db *sql.DB){
 	sql_additem := `
-        INSERT OR REPLACE INTO Cars(
-		MakeId,
-                ModelId,
-                Year,
-		StyleId
-        ) values((SELECT MakeId FROM Model WHERE Id = ?),?,?,?)
+        INSERT OR REPLACE INTO Log(
+		CarId,
+                MechanicId,
+                Problem,
+		Solution,
+		Date,
+		NextDate
+        ) values(?,?,?,?,?,?)
         `
 
         stmt, err := db.Prepare(sql_additem)
@@ -441,7 +444,7 @@ func (l Log) AddItems(db *sql.DB){
 	}
         defer stmt.Close()
 
-        _, err = stmt.Exec()
+        _, err = stmt.Exec(l.CarId, l.MechanicId, l.Problem, l.Solution, l.Date, l.NextDate)
         if err != nil{
 		panic(err)
 	}

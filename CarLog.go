@@ -6,6 +6,7 @@ import(
 	//"database/sql"
 	//_ "github.com/mattn/go-sqlite3"
 	"ProyCarLogs/DbHandle"
+	"time"
 )
 
 func main(){
@@ -30,6 +31,13 @@ func main(){
 
 	manuel := DbHandle.Mechanic{WorkshopName: "Taller Fulanitos",MechanicName: "Manuel", SpecialtyId: 1, Address: "Avenida fulana #123 Col centro", Phone: 1234567}
 	manuel.AddItems(db)
+
+	//Find the Id from intrepid
+
+	date := time.Now()
+
+	logIntrepid := DbHandle.Log{CarId: 2, MechanicId: 1, Problem: "Intrepid sigue goteando aceite y seguimos sin saber por donde cae la gota", Solution: "Se le cambiaron los empaques de no se que cosa", Date: date , NextDate: date.AddDate(0,0,1)}
+	logIntrepid.AddItems(db)
 
 
 }
