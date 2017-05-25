@@ -26,11 +26,11 @@ func main(){
 
 	//Fill catalogs that user won't manage
 	DbHandle.CreateFillCatalogs(db)
+
+	//Add Cars to the database
 	vibe := DbHandle.Car{ModelId: 3, Year: 2010, StyleId: 3}
 	vibe.AddItems(db)
 
-
-	//Add Cars to the database
 	intrepid := DbHandle.Car{ModelId: 2, Year: 2000, StyleId: 5}
 	intrepid.AddItems(db)
 
@@ -41,11 +41,14 @@ func main(){
 	malibu.AddItems(db)
 
 	//Find all the cars
-	allCars := DbHandle.ReadAllItems(db)
+	allCars := DbHandle.ReadAllCars(db)
 	printCars(allCars)
 
-	//Find  all the info from all the cars whose model is the same as the variable
+	//Find  all the info from the cars whose model is the same as the Car given
 	intrepids := intrepid.SearchItems(db)
+	if len(intrepids) == 1 {
+		intrepid = intrepids[0]
+	}
 	printCars(intrepids)
 
 	//Add Mechanics to the database
@@ -57,5 +60,7 @@ func main(){
 	logIntrepid := DbHandle.Log{CarId: 2, MechanicId: 1, Problem: "Intrepid sigue goteando aceite y seguimos sin saber por donde cae la gota", Solution: "Se le cambiaron los empaques de no se que cosa", Date: date , NextDate: date.AddDate(0,0,1)}
 	logIntrepid.AddItems(db)
 
+	//Delete all from tables.
+	DbHandle.DeleteAllData(db)
 
 }

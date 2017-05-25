@@ -265,6 +265,7 @@ func FillSpecialtyTable(db *sql.DB){
         sql_additem := `
         INSERT OR REPLACE INTO Specialty(
                 Specialty) 
+
         values(?)`
 
         stmt, err := db.Prepare(sql_additem)
@@ -295,7 +296,186 @@ func CreateFillCatalogs(db *sql.DB){
 	FillCatalogs(db)
 }
 
-// Below are the methods to manage the items.
+//Functions to Delete all data on each table
+func DeleteAllStyles(db *sql.DB){
+	sqlDelAll := `
+	DELETE FROM Styles
+	`
+
+	stmt, err := db.Prepare(sqlDelAll)
+	if err != nil{
+		panic(err)
+	}
+	defer stmt.Close()
+
+	resp, err := stmt.Exec()
+	if err != nil{
+		panic(err)
+	}
+	row, err := resp.RowsAffected()
+	if err != nil{
+		panic(err)
+	}
+	if row < 1 {
+		panic("No rows affected")
+	}
+}
+
+func DeleteAllMakes(db *sql.DB){
+	sqlDelAll := `
+	DELETE FROM Makes
+	`
+
+	stmt, err := db.Prepare(sqlDelAll)
+	if err != nil{
+		panic(err)
+	}
+	defer stmt.Close()
+
+	resp, err := stmt.Exec()
+	if err != nil{
+		panic(err)
+	}
+	row, err := resp.RowsAffected()
+	if err != nil{
+		panic(err)
+	}
+	if row < 1 {
+		panic("No rows affected")
+	}
+}
+
+func DeleteAllModels(db *sql.DB){
+	sqlDelAll := `
+	DELETE FROM Model
+	`
+
+	stmt, err := db.Prepare(sqlDelAll)
+	if err != nil{
+		panic(err)
+	}
+	defer stmt.Close()
+
+	resp, err := stmt.Exec()
+	if err != nil{
+		panic(err)
+	}
+	row, err := resp.RowsAffected()
+	if err != nil{
+		panic(err)
+	}
+	if row < 1 {
+		panic("No rows affected")
+	}
+}
+
+func DeleteAllSpecialties(db *sql.DB){
+	sqlDelAll := `
+	DELETE FROM Specialty
+	`
+
+	stmt, err := db.Prepare(sqlDelAll)
+	if err != nil{
+		panic(err)
+	}
+	defer stmt.Close()
+
+	resp, err := stmt.Exec()
+	if err != nil{
+		panic(err)
+	}
+	row, err := resp.RowsAffected()
+	if err != nil{
+		panic(err)
+	}
+	if row < 1 {
+		panic("No rows affected")
+	}
+}
+
+func DeleteAllCars(db *sql.DB){
+	sqlDelAll := `
+	DELETE FROM Cars
+	`
+
+	stmt, err := db.Prepare(sqlDelAll)
+	if err != nil{
+		panic(err)
+	}
+	defer stmt.Close()
+
+	resp, err := stmt.Exec()
+	if err != nil{
+		panic(err)
+	}
+	row, err := resp.RowsAffected()
+	if err != nil{
+		panic(err)
+	}
+	if row < 1 {
+		panic("No rows affected")
+	}
+}
+
+func DeleteAllMechanics(db *sql.DB){
+	sqlDelAll := `
+	DELETE FROM Mechanic
+	`
+
+	stmt, err := db.Prepare(sqlDelAll)
+	if err != nil{
+		panic(err)
+	}
+	defer stmt.Close()
+
+	resp, err := stmt.Exec()
+	if err != nil{
+		panic(err)
+	}
+	row, err := resp.RowsAffected()
+	if err != nil{
+		panic(err)
+	}
+	if row < 1 {
+		panic("No rows affected")
+	}
+}
+
+func DeleteAllLogs(db *sql.DB){
+	sqlDelAll := `
+	DELETE FROM Log
+	`
+
+	stmt, err := db.Prepare(sqlDelAll)
+	if err != nil{
+		panic(err)
+	}
+	defer stmt.Close()
+
+	resp, err := stmt.Exec()
+	if err != nil{
+		panic(err)
+	}
+	row, err := resp.RowsAffected()
+	if err != nil{
+		panic(err)
+	}
+	if row < 1 {
+		panic("No rows affected")
+	}
+}
+
+func DeleteAllData(db *sql.DB){
+	DeleteAllStyles(db)
+	DeleteAllMakes(db)
+	DeleteAllModels(db)
+	DeleteAllSpecialties(db)
+	DeleteAllCars(db)
+	DeleteAllMechanics(db)
+	DeleteAllLogs(db)
+}
+
+// Below is the interface to manage the items.
 type Crud interface{
         AddItems()
    //     ReadAllItems()
@@ -304,9 +484,10 @@ type Crud interface{
         DeleteItems()
 }
 
+//Cars Methods
 func (c Car) AddItems(db *sql.DB){
-	sql_additem := `
-        INSERT OR REPLACE INTO Cars(
+	sqlAddItem := `
+        INSERT INTO Cars(
 		MakeId,
                 ModelId,
                 Year,
@@ -314,7 +495,7 @@ func (c Car) AddItems(db *sql.DB){
         ) values((SELECT MakeId FROM Model WHERE Id = ?),?,?,?)
         `
 
-        stmt, err := db.Prepare(sql_additem)
+        stmt, err := db.Prepare(sqlAddItem)
         if err != nil{
 		panic(err)
 	}
@@ -326,8 +507,8 @@ func (c Car) AddItems(db *sql.DB){
 	}
 }
 
-func ReadAllItems(db *sql.DB) []Car{ //read all items
-	sql_readall := `
+func ReadAllCars(db *sql.DB) []Car{ //read all items
+	sqlReadAll := `
 	SELECT C.Id, C.MakeId, Ma.Make, C.ModelId, Mo.Model, C.Year, C.StyleId, S.Style
    	FROM Makes as Ma, Model as Mo, Cars as C, Styles as S
    	WHERE C.MakeId = Ma.Id 
@@ -336,7 +517,7 @@ func ReadAllItems(db *sql.DB) []Car{ //read all items
 	ORDER BY C.Id ASC
 	`
 
-	rows, err := db.Query(sql_readall)
+	rows, err := db.Query(sqlReadAll)
 	if err != nil { panic(err) }
 	defer rows.Close()
 
@@ -351,12 +532,14 @@ func ReadAllItems(db *sql.DB) []Car{ //read all items
 }
 
 func (c Car) UpdateItems(db *sql.DB){
-
+//	sqlUpdateItem := `
+//	
+//	`
 }
 
 func (c Car) SearchItems(db *sql.DB) []Car{ //Search only for the ones of the same model
-	sql_readall := `
-	SELECT C.Id, Ma.Make, Mo.Model, C.Year, S.Style
+	sqlReadAll := `
+	SELECT C.Id, C.MakeId, Ma.Make, C.ModelId, Mo.Model, C.Year, C.StyleId, S.Style
    	FROM Makes as Ma, Model as Mo, Cars as C, Styles as S
    	WHERE C.MakeId = Ma.Id 
    	AND C.ModelId = Mo.Id
@@ -365,14 +548,14 @@ func (c Car) SearchItems(db *sql.DB) []Car{ //Search only for the ones of the sa
 	ORDER BY C.Id ASC
 	`
 
-	rows, err := db.Query(sql_readall, c.ModelId)
+	rows, err := db.Query(sqlReadAll, c.ModelId)
 	if err != nil { panic(err) }
 	defer rows.Close()
 
 	var result []Car
 	for rows.Next() {
 		var car Car
-		err := rows.Scan(&car.Id, &car.MakeStr, &car.ModelStr, &car.Year, &car.StyleStr)
+		err := rows.Scan(&car.Id, &car.MakeId, &car.MakeStr, &car.ModelId, &car.ModelStr, &car.Year, &car.StyleId, &car.StyleStr)
 		if err != nil { panic(err) }
 		result = append(result, car)
 	}
@@ -380,12 +563,14 @@ func (c Car) SearchItems(db *sql.DB) []Car{ //Search only for the ones of the sa
 }
 
 func (c Car) DeleteItems(db *sql.DB){
-
+	//sqlDelItem := `
+	//
+	//`
 }
 
 //Mechanic methods
 func (m Mechanic) AddItems(db *sql.DB){
-	sql_additem := `
+	sqlAddItem := `
         INSERT OR REPLACE INTO Mechanic(
 		WorkshopName,
                 MechanicName,
@@ -395,7 +580,7 @@ func (m Mechanic) AddItems(db *sql.DB){
         ) values(?,?,?,?,?)
         `
 
-        stmt, err := db.Prepare(sql_additem)
+        stmt, err := db.Prepare(sqlAddItem)
         if err != nil{
 		panic(err)
 	}
@@ -446,9 +631,10 @@ func (m Mechanic) DeleteItems(db *sql.DB){
 
 }
 
+
 //Log methods
 func (l Log) AddItems(db *sql.DB){
-	sql_additem := `
+	sqlAddItem := `
         INSERT OR REPLACE INTO Log(
 		CarId,
                 MechanicId,
@@ -459,7 +645,7 @@ func (l Log) AddItems(db *sql.DB){
         ) values(?,?,?,?,?,?)
         `
 
-        stmt, err := db.Prepare(sql_additem)
+        stmt, err := db.Prepare(sqlAddItem)
         if err != nil{
 		panic(err)
 	}
@@ -516,5 +702,3 @@ func (l Log) SearchItmes(db *sql.DB){
 func (l Log) DeleteItems(db *sql.DB){
 
 }
-
-
