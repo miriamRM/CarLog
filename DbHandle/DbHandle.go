@@ -5,7 +5,7 @@ package DbHandle
 import(
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
-	"fmt"
+	//"fmt"
 	"time"
 )
 
@@ -62,12 +62,16 @@ type Specialty struct{
 	Specialty string
 }
 
+func checkErr(err error){
+	if err != nil{
+		panic(err)
+	}
+}
+
 // Below are the functions to open and create the tables on the DB
 func OpenDB(path string) *sql.DB{
 	db, err := sql.Open("sqlite3", path)
-	if err != nil {
-		panic(err)
-	}
+	checkErr(err)
 	if db == nil {
 		panic("db nil")
 	}
@@ -81,9 +85,7 @@ func CreateTableStyles(db *sql.DB){
 		Style TEXT NOT NULL);`
 
 	_, err := db.Exec(sql_table)
-	if err != nil {
-		panic(err)
-	}
+	checkErr(err)
 }
 
 func CreateTableMakes(db *sql.DB){
@@ -93,9 +95,7 @@ func CreateTableMakes(db *sql.DB){
 		Make TEXT NOT NULL);`
 
 	_, err := db.Exec(sql_table)
-	if err != nil {
-		panic(err)
-	}
+	checkErr(err)
 }
 
 
@@ -108,9 +108,7 @@ func CreateTableModel(db *sql.DB){
 		FOREIGN KEY(MakeId) REFERENCES Makes(Id));`
 
 	_, err := db.Exec(sql_table)
-	if err != nil {
-		panic(err)
-	}
+	checkErr(err)
 }
 
 func CreateTableCars(db *sql.DB){
@@ -126,9 +124,7 @@ func CreateTableCars(db *sql.DB){
 		FOREIGN KEY(ModelId) REFERENCES Model(Id));`
 
 	_, err := db.Exec(sql_table)
-	if err != nil {
-		panic(err)
-	}
+	checkErr(err)
 }
 
 func CreateTableSpecialty(db *sql.DB){
@@ -138,9 +134,7 @@ func CreateTableSpecialty(db *sql.DB){
 		Specialty TEXT NOT NULL);`
 
 	_, err := db.Exec(sql_table)
-	if err != nil {
-		panic(err)
-	}
+	checkErr(err)
 }
 
 func CreateTableMechanic(db *sql.DB){
@@ -155,9 +149,7 @@ func CreateTableMechanic(db *sql.DB){
 		FOREIGN KEY(SpecialtyId) REFERENCES Specialty(Id));`
 
 	_, err := db.Exec(sql_table)
-	if err != nil {
-		panic(err)
-	}
+	checkErr(err)
 }
 
 func CreateTableLog(db *sql.DB){
@@ -174,9 +166,7 @@ func CreateTableLog(db *sql.DB){
 		FOREIGN KEY(MechanicId) REFERENCES Mechanic(Id));` //al insertar una fecha hacerlo como CURRENT_TIMESTAMP
 
 	_, err := db.Exec(sql_table)
-	if err != nil {
-		panic(err)
-	}
+	checkErr(err)
 }
 
 func CreateAllTables(db *sql.DB){
@@ -198,16 +188,12 @@ func FillStyleTable(db *sql.DB){
 	values(?)`
 
 	stmt, err := db.Prepare(sql_additem)
-	if err != nil{
-		panic(err)
-	}
+	checkErr(err)
 	defer stmt.Close()
 
 	for _, style := range styles{
 		_, err = stmt.Exec(style)
-		if err != nil{
-			panic(err)
-		}
+		checkErr(err)
 	}
 }
 
@@ -219,14 +205,12 @@ func FillMakesTable(db *sql.DB){
 	values(?)`
 
 	stmt, err := db.Prepare(sql_additem)
-	if err != nil{
-		panic(err)
-	}
+	checkErr(err)
 	defer stmt.Close()
 
 	for _, m := range makes{ //make is a special word from GO
 		_, err = stmt.Exec(m)
-		if err != nil { panic(err) }
+		checkErr(err)
 	}
 }
 
@@ -247,16 +231,12 @@ func FillModelTable(db *sql.DB){
 	values(?,?)`
 
 	stmt, err := db.Prepare(sql_additem)
-	if err != nil{
-		panic(err)
-	}
+	checkErr(err)
 	defer stmt.Close()
 
 	for _, model := range models{
 		_, err = stmt.Exec(model.MakeId, model.Model)
-		if err != nil{
-			panic(err)
-		}
+		checkErr(err)
 	}
 }
 
@@ -269,17 +249,12 @@ func FillSpecialtyTable(db *sql.DB){
         values(?)`
 
         stmt, err := db.Prepare(sql_additem)
-        if err != nil{
-                panic(err)
-		fmt.Println(err)
-        }
+	checkErr(err)
         defer stmt.Close()
 
         for _, special := range specialty{
                 _, err = stmt.Exec(special)
-                if err != nil{
-			panic(err)
-		}
+		checkErr(err)
         }
 }
 
@@ -303,19 +278,14 @@ func DeleteAllStyles(db *sql.DB){
 	`
 
 	stmt, err := db.Prepare(sqlDelAll)
-	if err != nil{
-		panic(err)
-	}
+	checkErr(err)
 	defer stmt.Close()
 
 	resp, err := stmt.Exec()
-	if err != nil{
-		panic(err)
-	}
+	checkErr(err)
+
 	row, err := resp.RowsAffected()
-	if err != nil{
-		panic(err)
-	}
+	checkErr(err)
 	if row < 1 {
 		panic("No rows affected")
 	}
@@ -327,19 +297,14 @@ func DeleteAllMakes(db *sql.DB){
 	`
 
 	stmt, err := db.Prepare(sqlDelAll)
-	if err != nil{
-		panic(err)
-	}
+	checkErr(err)
 	defer stmt.Close()
 
 	resp, err := stmt.Exec()
-	if err != nil{
-		panic(err)
-	}
+	checkErr(err)
+
 	row, err := resp.RowsAffected()
-	if err != nil{
-		panic(err)
-	}
+	checkErr(err)
 	if row < 1 {
 		panic("No rows affected")
 	}
@@ -351,19 +316,14 @@ func DeleteAllModels(db *sql.DB){
 	`
 
 	stmt, err := db.Prepare(sqlDelAll)
-	if err != nil{
-		panic(err)
-	}
+	checkErr(err)
 	defer stmt.Close()
 
 	resp, err := stmt.Exec()
-	if err != nil{
-		panic(err)
-	}
+	checkErr(err)
+
 	row, err := resp.RowsAffected()
-	if err != nil{
-		panic(err)
-	}
+	checkErr(err)
 	if row < 1 {
 		panic("No rows affected")
 	}
@@ -375,19 +335,14 @@ func DeleteAllSpecialties(db *sql.DB){
 	`
 
 	stmt, err := db.Prepare(sqlDelAll)
-	if err != nil{
-		panic(err)
-	}
+	checkErr(err)
 	defer stmt.Close()
 
 	resp, err := stmt.Exec()
-	if err != nil{
-		panic(err)
-	}
+	checkErr(err)
+
 	row, err := resp.RowsAffected()
-	if err != nil{
-		panic(err)
-	}
+	checkErr(err)
 	if row < 1 {
 		panic("No rows affected")
 	}
@@ -399,19 +354,14 @@ func DeleteAllCars(db *sql.DB){
 	`
 
 	stmt, err := db.Prepare(sqlDelAll)
-	if err != nil{
-		panic(err)
-	}
+	checkErr(err)
 	defer stmt.Close()
 
 	resp, err := stmt.Exec()
-	if err != nil{
-		panic(err)
-	}
+	checkErr(err)
+
 	row, err := resp.RowsAffected()
-	if err != nil{
-		panic(err)
-	}
+	checkErr(err)
 	if row < 1 {
 		panic("No rows affected")
 	}
@@ -423,19 +373,14 @@ func DeleteAllMechanics(db *sql.DB){
 	`
 
 	stmt, err := db.Prepare(sqlDelAll)
-	if err != nil{
-		panic(err)
-	}
+	checkErr(err)
 	defer stmt.Close()
 
 	resp, err := stmt.Exec()
-	if err != nil{
-		panic(err)
-	}
+	checkErr(err)
+
 	row, err := resp.RowsAffected()
-	if err != nil{
-		panic(err)
-	}
+	checkErr(err)
 	if row < 1 {
 		panic("No rows affected")
 	}
@@ -447,19 +392,14 @@ func DeleteAllLogs(db *sql.DB){
 	`
 
 	stmt, err := db.Prepare(sqlDelAll)
-	if err != nil{
-		panic(err)
-	}
+	checkErr(err)
 	defer stmt.Close()
 
 	resp, err := stmt.Exec()
-	if err != nil{
-		panic(err)
-	}
+	checkErr(err)
+
 	row, err := resp.RowsAffected()
-	if err != nil{
-		panic(err)
-	}
+	checkErr(err)
 	if row < 1 {
 		panic("No rows affected")
 	}
@@ -496,15 +436,11 @@ func (c Car) AddItems(db *sql.DB){
         `
 
         stmt, err := db.Prepare(sqlAddItem)
-        if err != nil{
-		panic(err)
-	}
+	checkErr(err)
         defer stmt.Close()
 
         _, err = stmt.Exec(c.ModelId,c.ModelId,c.Year,c.StyleId)
-        if err != nil{
-		panic(err)
-	}
+	checkErr(err)
 }
 
 func ReadAllCars(db *sql.DB) []Car{ //read all items
@@ -518,23 +454,38 @@ func ReadAllCars(db *sql.DB) []Car{ //read all items
 	`
 
 	rows, err := db.Query(sqlReadAll)
-	if err != nil { panic(err) }
+	checkErr(err)
 	defer rows.Close()
 
 	var result []Car
 	for rows.Next() {
 		var car Car
 		err := rows.Scan(&car.Id, &car.MakeId, &car.MakeStr, &car.ModelId, &car.ModelStr, &car.Year, &car.StyleId, &car.StyleStr)
-		if err != nil { panic(err) }
+		checkErr(err)
 		result = append(result, car)
 	}
 	return result
 }
 
 func (c Car) UpdateItems(db *sql.DB){
-//	sqlUpdateItem := `
-//	
-//	`
+	sqlUpdateItem := `
+	UPDATE Cars
+	SET MakeId = ?, ModelId = ?, Year = ?, StyleId = ?
+	WHERE Id = ?
+	`
+
+	stmt, err := db.Prepare(sqlUpdateItem)
+	checkErr(err)
+	defer stmt.Close()
+
+	resp, err := stmt.Exec(c.MakeId, c.ModelId, c.Year, c.StyleId, c.Id)
+	checkErr(err)
+
+	row, err := resp.RowsAffected()
+	checkErr(err)
+	if row < 1{
+		panic("No rows affected")
+	}
 }
 
 func (c Car) SearchItems(db *sql.DB) []Car{ //Search only for the ones of the same model
@@ -549,23 +500,37 @@ func (c Car) SearchItems(db *sql.DB) []Car{ //Search only for the ones of the sa
 	`
 
 	rows, err := db.Query(sqlReadAll, c.ModelId)
-	if err != nil { panic(err) }
+	checkErr(err)
 	defer rows.Close()
 
 	var result []Car
 	for rows.Next() {
 		var car Car
 		err := rows.Scan(&car.Id, &car.MakeId, &car.MakeStr, &car.ModelId, &car.ModelStr, &car.Year, &car.StyleId, &car.StyleStr)
-		if err != nil { panic(err) }
+		checkErr(err)
 		result = append(result, car)
 	}
 	return result
 }
 
 func (c Car) DeleteItems(db *sql.DB){
-	//sqlDelItem := `
-	//
-	//`
+	sqlDelItem := `
+	DELETE FROM Cars
+	WHERE Id = ?
+	`
+
+	stmt, err := db.Prepare(sqlDelItem)
+	checkErr(err)
+	defer stmt.Close()
+
+	resp, err := stmt.Exec(c.Id)
+	checkErr(err)
+
+	row, err := resp.RowsAffected()
+	checkErr(err)
+	if row < 1 {
+		panic("No rows affected")
+	}
 }
 
 //Mechanic methods
@@ -581,15 +546,11 @@ func (m Mechanic) AddItems(db *sql.DB){
         `
 
         stmt, err := db.Prepare(sqlAddItem)
-        if err != nil{
-		panic(err)
-	}
+	checkErr(err)
         defer stmt.Close()
 
         _, err = stmt.Exec(m.WorkshopName, m.MechanicName, m.SpecialtyId, m.Address, m.Phone)
-        if err != nil{
-		panic(err)
-	}
+	checkErr(err)
 }
 
 func (m Mechanic) ReadAllItems(db *sql.DB){
@@ -602,17 +563,13 @@ func (m Mechanic) ReadAllItems(db *sql.DB){
    	AND C.StyleId = S.Id`
 
         rows, err := db.Query(sql_readall)
-        if err != nil{
-		panic(err)
-	}
+	checkErr(err)
         defer rows.Close()
 
         for rows.Next() {
                 //var car Car
                 err := rows.Scan(&car., &user.Name, &user.Date)
-                if err != nil{
-			panic(err)
-		}
+		checkErr(err)
                 result = append(result, user)
         }
         return result
@@ -646,15 +603,11 @@ func (l Log) AddItems(db *sql.DB){
         `
 
         stmt, err := db.Prepare(sqlAddItem)
-        if err != nil{
-		panic(err)
-	}
+	checkErr(err)
         defer stmt.Close()
 
         _, err = stmt.Exec(l.CarId, l.MechanicId, l.Problem, l.Solution, l.Date, l.NextDate)
-        if err != nil{
-		panic(err)
-	}
+	checkErr(err)
 }
 
 /* AddDate(<año>,<mes>,<dia>)
@@ -674,17 +627,13 @@ func (l Log) ReadAllItems(db *sql.DB){
    	AND C.StyleId = S.Id`
 
         rows, err := db.Query(sql_readall)
-        if err != nil{
-		panic(err)
-	}
+	checkErr(err)
         defer rows.Close()
 
         for rows.Next() {
                 //var car Car
                 err := rows.Scan(&car., &user.Name, &user.Date)
-                if err != nil{
-			panic(err)
-		}
+		checkErr(err)
                 result = append(result, user)
         }
         return result

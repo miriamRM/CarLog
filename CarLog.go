@@ -27,6 +27,7 @@ func main(){
 	//Fill catalogs that user won't manage
 	DbHandle.CreateFillCatalogs(db)
 
+	//CARS
 	//Add Cars to the database
 	vibe := DbHandle.Car{ModelId: 3, Year: 2010, StyleId: 3}
 	vibe.AddItems(db)
@@ -51,16 +52,36 @@ func main(){
 	}
 	printCars(intrepids)
 
+	//change the year of the car and update it on the database
+	intrepid.Year = 1998
+	intrepid.UpdateItems(db)
+
+	//see if the change was done
+	intrepids = intrepid.SearchItems(db)
+	printCars(intrepids)
+
+	//delete the car
+	intrepid.DeleteItems(db)
+
+	//list all the cars to see if the car was deleted.
+	allCars = DbHandle.ReadAllCars(db)
+	printCars(allCars)
+
+
+	//MECHANICS
 	//Add Mechanics to the database
 	manuel := DbHandle.Mechanic{WorkshopName: "Taller Fulanitos",MechanicName: "Manuel", SpecialtyId: 1, Address: "Avenida fulana #123 Col centro", Phone: 1234567}
 	manuel.AddItems(db)
 
+
+	//LOGS
 	//Add Logs to the database
 	date := time.Now()
 	logIntrepid := DbHandle.Log{CarId: 2, MechanicId: 1, Problem: "Intrepid sigue goteando aceite y seguimos sin saber por donde cae la gota", Solution: "Se le cambiaron los empaques de no se que cosa", Date: date , NextDate: date.AddDate(0,0,1)}
 	logIntrepid.AddItems(db)
 
+
 	//Delete all from tables.
-	DbHandle.DeleteAllData(db)
+	//DbHandle.DeleteAllData(db)
 
 }
