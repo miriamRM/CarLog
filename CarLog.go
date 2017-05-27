@@ -3,8 +3,6 @@
 package main
 
 import(
-	//"database/sql"
-	//_ "github.com/mattn/go-sqlite3"
 	"ProyCarLogs/DbHandle"
 	"time"
 	"fmt"
@@ -14,6 +12,14 @@ func printCars(cars []DbHandle.Car){
 	fmt.Println("Id \t Make \t\t Model \t Year \t Style")
 	for _, c := range cars{
 		fmt.Printf("%v \t %v \t   %v \t %v \t %v \n", c.Id, c.MakeStr, c.ModelStr, c.Year, c.StyleStr)
+	}
+	fmt.Println("")
+}
+
+func printMech(mech []DbHandle.Mechanic){
+	fmt.Println("Id  Workshop  Mechanic  Specialty  Address  Phone")
+	for _, m := range mech{
+		fmt.Printf("%v  %v  %v  %v  %v  %v\n", m.Id, m.WorkshopName, m.MechanicName, m.SpecialtyStr, m.Address, m.Phone)
 	}
 	fmt.Println("")
 }
@@ -29,28 +35,40 @@ func main(){
 
 	//CARS
 	//Add Cars to the database
-	vibe := DbHandle.Car{ModelId: 3, Year: 2010, StyleId: 3}
+	vibe := DbHandle.Car{
+		ModelId: 3,
+		Year: 2010,
+		StyleId: 3}
 	vibe.AddItems(db)
 
-	intrepid := DbHandle.Car{ModelId: 2, Year: 2000, StyleId: 5}
+	intrepid := DbHandle.Car{
+		ModelId: 2,
+		Year: 2000,
+		StyleId: 5}
 	intrepid.AddItems(db)
 
-	caravan := DbHandle.Car{ModelId: 1, Year: 1996, StyleId: 4}
+	caravan := DbHandle.Car{
+		ModelId: 1,
+		Year: 1996,
+		StyleId: 4}
 	caravan.AddItems(db)
 
-	malibu := DbHandle.Car{ModelId: 7, Year: 2016, StyleId: 5}
+	malibu := DbHandle.Car{
+		ModelId: 7,
+		Year: 2016,
+		StyleId: 5}
 	malibu.AddItems(db)
 
 	//Find all the cars
 	allCars := DbHandle.ReadAllCars(db)
 	printCars(allCars)
 
-	//Find  all the info from the cars whose model is the same as the Car given
+	//Get info from the cars whose model is the same as the Car given
 	intrepids := intrepid.SearchItems(db)
+	printCars(intrepids)
 	if len(intrepids) == 1 {
 		intrepid = intrepids[0]
 	}
-	printCars(intrepids)
 
 	//change the year of the car and update it on the database
 	intrepid.Year = 1998
@@ -70,8 +88,41 @@ func main(){
 
 	//MECHANICS
 	//Add Mechanics to the database
-	manuel := DbHandle.Mechanic{WorkshopName: "Taller Fulanitos",MechanicName: "Manuel", SpecialtyId: 1, Address: "Avenida fulana #123 Col centro", Phone: 1234567}
+	manuel := DbHandle.Mechanic{
+		WorkshopName: "Taller Fulanitos",
+		MechanicName: "Manuel",
+		SpecialtyId: 1,
+		Address: "Avenida fulana #123 Col centro",
+		Phone: 1234567}
 	manuel.AddItems(db)
+
+	wero := DbHandle.Mechanic{
+		WorkshopName: "El Wero",
+		MechanicName: "Roger",
+		SpecialtyId: 4,
+		Address: "Calle Alisos Col Piedras Negras",
+		Phone: 6462053540}
+	wero.AddItems(db)
+
+	allMech := DbHandle.ReadAllMechanic(db)
+	printMech(allMech)
+
+	mech := wero.SearchItems(db)
+	printMech(mech)
+	if len(mech) == 1{
+		wero = mech[0]
+	}
+
+	wero.Address = "Calle Alisos #160 Col. Piedras Negras"
+	wero.UpdateItems(db)
+
+	mech = wero.SearchItems(db)
+	printMech(mech)
+
+	wero.DeleteItems(db)
+
+	allMech = DbHandle.ReadAllMechanic(db)
+	printMech(allMech)
 
 
 	//LOGS

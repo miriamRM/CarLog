@@ -15,7 +15,8 @@ type Mechanic struct{
         WorkshopName string
         MechanicName string
         SpecialtyId  int
-        Address      string
+        SpecialtyStr string
+	Address      string
         Phone        int
 }
 
@@ -274,8 +275,7 @@ func CreateFillCatalogs(db *sql.DB){
 //Functions to Delete all data on each table
 func DeleteAllStyles(db *sql.DB){
 	sqlDelAll := `
-	DELETE FROM Styles
-	`
+	DELETE FROM Styles`
 
 	stmt, err := db.Prepare(sqlDelAll)
 	checkErr(err)
@@ -293,8 +293,7 @@ func DeleteAllStyles(db *sql.DB){
 
 func DeleteAllMakes(db *sql.DB){
 	sqlDelAll := `
-	DELETE FROM Makes
-	`
+	DELETE FROM Makes`
 
 	stmt, err := db.Prepare(sqlDelAll)
 	checkErr(err)
@@ -312,8 +311,7 @@ func DeleteAllMakes(db *sql.DB){
 
 func DeleteAllModels(db *sql.DB){
 	sqlDelAll := `
-	DELETE FROM Model
-	`
+	DELETE FROM Model`
 
 	stmt, err := db.Prepare(sqlDelAll)
 	checkErr(err)
@@ -331,8 +329,7 @@ func DeleteAllModels(db *sql.DB){
 
 func DeleteAllSpecialties(db *sql.DB){
 	sqlDelAll := `
-	DELETE FROM Specialty
-	`
+	DELETE FROM Specialty`
 
 	stmt, err := db.Prepare(sqlDelAll)
 	checkErr(err)
@@ -350,8 +347,7 @@ func DeleteAllSpecialties(db *sql.DB){
 
 func DeleteAllCars(db *sql.DB){
 	sqlDelAll := `
-	DELETE FROM Cars
-	`
+	DELETE FROM Cars`
 
 	stmt, err := db.Prepare(sqlDelAll)
 	checkErr(err)
@@ -369,8 +365,7 @@ func DeleteAllCars(db *sql.DB){
 
 func DeleteAllMechanics(db *sql.DB){
 	sqlDelAll := `
-	DELETE FROM Mechanic
-	`
+	DELETE FROM Mechanic`
 
 	stmt, err := db.Prepare(sqlDelAll)
 	checkErr(err)
@@ -388,8 +383,7 @@ func DeleteAllMechanics(db *sql.DB){
 
 func DeleteAllLogs(db *sql.DB){
 	sqlDelAll := `
-	DELETE FROM Log
-	`
+	DELETE FROM Log`
 
 	stmt, err := db.Prepare(sqlDelAll)
 	checkErr(err)
@@ -420,7 +414,7 @@ type Crud interface{
         AddItems()
    //     ReadAllItems()
         UpdateItems()
-	SearchItmes()
+	SearchItems()
         DeleteItems()
 }
 
@@ -432,8 +426,7 @@ func (c Car) AddItems(db *sql.DB){
                 ModelId,
                 Year,
 		StyleId
-        ) values((SELECT MakeId FROM Model WHERE Id = ?),?,?,?)
-        `
+        ) values((SELECT MakeId FROM Model WHERE Id = ?),?,?,?)`
 
         stmt, err := db.Prepare(sqlAddItem)
 	checkErr(err)
@@ -443,17 +436,17 @@ func (c Car) AddItems(db *sql.DB){
 	checkErr(err)
 }
 
-func ReadAllCars(db *sql.DB) []Car{ //read all items
+func (c Car) SearchItems(db *sql.DB) []Car{ //Search only for the ones of the same model
 	sqlReadAll := `
 	SELECT C.Id, C.MakeId, Ma.Make, C.ModelId, Mo.Model, C.Year, C.StyleId, S.Style
    	FROM Makes as Ma, Model as Mo, Cars as C, Styles as S
    	WHERE C.MakeId = Ma.Id 
    	AND C.ModelId = Mo.Id
    	AND C.StyleId = S.Id 
-	ORDER BY C.Id ASC
-	`
+	AND C.ModelId = ?
+	ORDER BY C.Id ASC`
 
-	rows, err := db.Query(sqlReadAll)
+	rows, err := db.Query(sqlReadAll, c.ModelId)
 	checkErr(err)
 	defer rows.Close()
 
@@ -471,8 +464,7 @@ func (c Car) UpdateItems(db *sql.DB){
 	sqlUpdateItem := `
 	UPDATE Cars
 	SET MakeId = ?, ModelId = ?, Year = ?, StyleId = ?
-	WHERE Id = ?
-	`
+	WHERE Id = ?`
 
 	stmt, err := db.Prepare(sqlUpdateItem)
 	checkErr(err)
@@ -488,36 +480,10 @@ func (c Car) UpdateItems(db *sql.DB){
 	}
 }
 
-func (c Car) SearchItems(db *sql.DB) []Car{ //Search only for the ones of the same model
-	sqlReadAll := `
-	SELECT C.Id, C.MakeId, Ma.Make, C.ModelId, Mo.Model, C.Year, C.StyleId, S.Style
-   	FROM Makes as Ma, Model as Mo, Cars as C, Styles as S
-   	WHERE C.MakeId = Ma.Id 
-   	AND C.ModelId = Mo.Id
-   	AND C.StyleId = S.Id 
-	AND C.ModelId = ?
-	ORDER BY C.Id ASC
-	`
-
-	rows, err := db.Query(sqlReadAll, c.ModelId)
-	checkErr(err)
-	defer rows.Close()
-
-	var result []Car
-	for rows.Next() {
-		var car Car
-		err := rows.Scan(&car.Id, &car.MakeId, &car.MakeStr, &car.ModelId, &car.ModelStr, &car.Year, &car.StyleId, &car.StyleStr)
-		checkErr(err)
-		result = append(result, car)
-	}
-	return result
-}
-
 func (c Car) DeleteItems(db *sql.DB){
 	sqlDelItem := `
 	DELETE FROM Cars
-	WHERE Id = ?
-	`
+	WHERE Id = ?`
 
 	stmt, err := db.Prepare(sqlDelItem)
 	checkErr(err)
@@ -536,14 +502,13 @@ func (c Car) DeleteItems(db *sql.DB){
 //Mechanic methods
 func (m Mechanic) AddItems(db *sql.DB){
 	sqlAddItem := `
-        INSERT OR REPLACE INTO Mechanic(
+        INSERT INTO Mechanic(
 		WorkshopName,
                 MechanicName,
                 SpecialtyId,
 		Address,
 		Phone
-        ) values(?,?,?,?,?)
-        `
+        ) values(?,?,?,?,?)`
 
         stmt, err := db.Prepare(sqlAddItem)
 	checkErr(err)
@@ -553,39 +518,66 @@ func (m Mechanic) AddItems(db *sql.DB){
 	checkErr(err)
 }
 
-func (m Mechanic) ReadAllItems(db *sql.DB){
-/*
-	sql_readall := `
-	SELECT Ma.Make, Mo.Model, C.Year, S.Style
-   	FROM Makes as Ma, Model as Mo, Cars as C, Styles as S
-   	WHERE C.MakeId = Ma.Id 
-   	AND C.ModelId = Mo.Id
-   	AND C.StyleId = S.Id`
+func (m Mechanic) SearchItems(db *sql.DB) []Mechanic{
+	sqlReadAll := `
+	SELECT Me.Id, Me.WorkshopName, Me.MechanicName, Me.SpecialtyId, Sp.Specialty, Me.Address, Me.Phone 
+   	FROM Mechanic as Me, Specialty as Sp
+   	WHERE Me.SpecialtyId = Sp.Id 
+	AND Me.WorkshopName = ?
+	ORDER BY Me.Id ASC`
 
-        rows, err := db.Query(sql_readall)
+	rows, err := db.Query(sqlReadAll, m.WorkshopName)
 	checkErr(err)
-        defer rows.Close()
+	defer rows.Close()
 
-        for rows.Next() {
-                //var car Car
-                err := rows.Scan(&car., &user.Name, &user.Date)
+	var result []Mechanic
+	for rows.Next() {
+		var Me Mechanic
+		err := rows.Scan(&Me.Id, &Me.WorkshopName, &Me.MechanicName, &Me.SpecialtyId, &Me.SpecialtyStr, &Me.Address, &Me.Phone)
 		checkErr(err)
-                result = append(result, user)
-        }
-        return result
-*/
+		result = append(result, Me)
+	}
+	return result
 }
 
 func (m Mechanic) UpdateItems(db *sql.DB){
+	sqlUpdateItem := `
+	UPDATE Mechanic
+	SET WorkshopName = ?, MechanicName = ?, SpecialtyId = ?, Address = ?, Phone = ?
+	WHERE Id = ?
+`
 
-}
+	stmt, err := db.Prepare(sqlUpdateItem)
+	checkErr(err)
+	defer stmt.Close()
 
-func (m Mechanic) SearchItmes(db *sql.DB){
+	resp, err := stmt.Exec(m.WorkshopName, m.MechanicName, m.SpecialtyId, m.Address, m.Phone, m.Id)
+	checkErr(err)
 
+	row, err := resp.RowsAffected()
+	checkErr(err)
+	if row < 1{
+		panic("No rows affected")
+	}
 }
 
 func (m Mechanic) DeleteItems(db *sql.DB){
+	sqlDelItem := `
+	DELETE FROM Mechanic
+	WHERE Id = ?`
 
+	stmt, err := db.Prepare(sqlDelItem)
+	checkErr(err)
+	defer stmt.Close()
+
+	resp, err := stmt.Exec(m.Id)
+	checkErr(err)
+
+	row, err := resp.RowsAffected()
+	checkErr(err)
+	if row < 1 {
+		panic("No rows affected")
+	}
 }
 
 
@@ -599,8 +591,7 @@ func (l Log) AddItems(db *sql.DB){
 		Solution,
 		Date,
 		NextDate
-        ) values(?,?,?,?,?,?)
-        `
+        ) values(?,?,?,?,?,?)`
 
         stmt, err := db.Prepare(sqlAddItem)
 	checkErr(err)
@@ -617,7 +608,60 @@ oneMonth := today.AddDate(0,1,0)
 fmt.Println(oneMonth)
 */
 
-func (l Log) ReadAllItems(db *sql.DB){
+func (l Log) UpdateItems(db *sql.DB){
+
+}
+
+func (l Log) SearchItems(db *sql.DB){
+
+}
+
+func (l Log) DeleteItems(db *sql.DB){
+
+}
+
+func ReadAllCars(db *sql.DB) []Car{ //read all items
+	sqlReadAll := `
+	SELECT C.Id, C.MakeId, Ma.Make, C.ModelId, Mo.Model, C.Year, C.StyleId, S.Style
+   	FROM Makes as Ma, Model as Mo, Cars as C, Styles as S
+   	WHERE C.MakeId = Ma.Id 
+   	AND C.ModelId = Mo.Id
+   	AND C.StyleId = S.Id 
+	ORDER BY C.Id ASC`
+
+	rows, err := db.Query(sqlReadAll)
+	checkErr(err)
+	defer rows.Close()
+
+	var result []Car
+	for rows.Next() {
+		var car Car
+		err := rows.Scan(&car.Id, &car.MakeId, &car.MakeStr, &car.ModelId, &car.ModelStr, &car.Year, &car.StyleId, &car.StyleStr)
+		checkErr(err)
+		result = append(result, car)
+	}
+	return result
+}
+
+func ReadAllMechanic(db *sql.DB) []Mechanic{
+	sqlReadAll := `
+	SELECT Me.Id, Me.WorkshopName, Me.MechanicName, Me.SpecialtyId, Sp.Specialty, Me.Address, Me.Phone 
+   	FROM Mechanic as Me, Specialty as Sp
+   	WHERE Me.SpecialtyId = Sp.Id 
+	ORDER BY Me.Id ASC`
+
+	rows, err := db.Query(sqlReadAll)
+	checkErr(err)
+	defer rows.Close()
+
+	var result []Mechanic
+	for rows.Next() {
+		var Me Mechanic
+		err := rows.Scan(&Me.Id, &Me.WorkshopName, &Me.MechanicName, &Me.SpecialtyId, &Me.SpecialtyStr, &Me.Address, &Me.Phone)
+		checkErr(err)
+		result = append(result, Me)
+	}
+	return result
 /*
 	sql_readall := `
 	SELECT Ma.Make, Mo.Model, C.Year, S.Style
@@ -640,14 +684,26 @@ func (l Log) ReadAllItems(db *sql.DB){
 */
 }
 
-func (l Log) UpdateItems(db *sql.DB){
+func ReadAllLogs(db *sql.DB){
+/*
+	sql_readall := `
+	SELECT Ma.Make, Mo.Model, C.Year, S.Style
+   	FROM Makes as Ma, Model as Mo, Cars as C, Styles as S
+   	WHERE C.MakeId = Ma.Id 
+   	AND C.ModelId = Mo.Id
+   	AND C.StyleId = S.Id`
 
+        rows, err := db.Query(sql_readall)
+	checkErr(err)
+        defer rows.Close()
+
+        for rows.Next() {
+                //var car Car
+                err := rows.Scan(&car., &user.Name, &user.Date)
+		checkErr(err)
+                result = append(result, user)
+        }
+        return result
+*/
 }
 
-func (l Log) SearchItmes(db *sql.DB){
-
-}
-
-func (l Log) DeleteItems(db *sql.DB){
-
-}
