@@ -24,6 +24,14 @@ func printMech(mech []DbHandle.Mechanic){
 	fmt.Println("")
 }
 
+func printLog(logs []DbHandle.Log){
+	fmt.Println("Id  Car  Workshop  Problem  Solution  Date  Next date")
+	for _, l := range logs{
+		fmt.Printf("%v %v %v %v %v %v %v\n",l.Id, l.CarStr, l.MechanicStr, l.Problem, l.Solution, l.Date, l.NextDate)
+	}
+	fmt.Println("")
+}
+
 func main(){
 	//OpenDB
 	const DBPATH = "./data/CarLog.db"
@@ -39,44 +47,47 @@ func main(){
 		ModelId: 3,
 		Year: 2010,
 		StyleId: 3}
-	vibe.AddItems(db)
+	vibe = vibe.AddItems(db)
 
 	intrepid := DbHandle.Car{
 		ModelId: 2,
 		Year: 2000,
 		StyleId: 5}
-	intrepid.AddItems(db)
+	intrepid = intrepid.AddItems(db)
 
 	caravan := DbHandle.Car{
 		ModelId: 1,
 		Year: 1996,
 		StyleId: 4}
-	caravan.AddItems(db)
+	caravan = caravan.AddItems(db)
 
 	malibu := DbHandle.Car{
 		ModelId: 7,
 		Year: 2016,
 		StyleId: 5}
-	malibu.AddItems(db)
+	malibu = malibu.AddItems(db)
 
 	//Find all the cars
 	allCars := DbHandle.ReadAllCars(db)
 	printCars(allCars)
 
 	//Get info from the cars whose model is the same as the Car given
-	intrepids := intrepid.SearchItems(db)
-	printCars(intrepids)
-	if len(intrepids) == 1 {
-		intrepid = intrepids[0]
-	}
+	cars := vibe.SearchItems(db)
+	printCars(cars)
+
+	cars = caravan.SearchItems(db)
+	printCars(cars)
+
+	cars = malibu.SearchItems(db)
+	printCars(cars)
 
 	//change the year of the car and update it on the database
 	intrepid.Year = 1998
 	intrepid.UpdateItems(db)
 
 	//see if the change was done
-	intrepids = intrepid.SearchItems(db)
-	printCars(intrepids)
+	cars = intrepid.SearchItems(db)
+	printCars(cars)
 
 	//delete the car
 	intrepid.DeleteItems(db)
@@ -128,11 +139,45 @@ func main(){
 	//LOGS
 	//Add Logs to the database
 	date := time.Now()
-	logIntrepid := DbHandle.Log{CarId: 2, MechanicId: 1, Problem: "Intrepid sigue goteando aceite y seguimos sin saber por donde cae la gota", Solution: "Se le cambiaron los empaques de no se que cosa", Date: date , NextDate: date.AddDate(0,0,1)}
-	logIntrepid.AddItems(db)
+	//fmt.Println(date)
 
+	logVibe := DbHandle.Log{
+		CarId: 1,
+		MechanicId: 1,
+		Problem: "Sigue goteando aceite y seguimos sin saber por donde cae la gota",
+		Solution: "Se le cambiaron los empaques de no se que cosa",
+		Date: date,
+		NextDate: date.AddDate(0,0,1),
+	}
+	logVibe = logVibe.AddItems(db)
+//	fmt.Println("\n log in CarLog \n",logVibe)
+
+	logMalibu := DbHandle.Log{
+		CarId: malibu.Id,
+		MechanicId: 1,
+		Problem: "Problem 1",
+		Solution: "Solution 1",
+		Date: date,
+	}
+	logMalibu = logMalibu.AddItems(db)
+	//fmt.Println(logMalibu)
+
+	logs := DbHandle.ReadAllLogs(db)
+	printLog(logs)
+
+	logs = logMalibu.SearchItems(db)
+	printLog(logs)
+
+	logMalibu.Problem = "Problem 101"
+	logMalibu.UpdateItems(db)
+	//fmt.Println(logMalibu)
+
+	logVibe.DeleteItems(db)
+	//fmt.Println(logVibe)
+
+	logs = DbHandle.ReadAllLogs(db)
+	printLog(logs)
 
 	//Delete all from tables.
-	//DbHandle.DeleteAllData(db)
-
+	DbHandle.DeleteAllData(db)
 }

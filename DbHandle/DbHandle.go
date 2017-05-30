@@ -5,8 +5,10 @@ package DbHandle
 import(
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
-	//"fmt"
+	//"ProyCarLogs/GoogleAPIs/CalendarAPI"
+	//"ProyCarLogs/GoogleAPIs/GmailAPI"
 	"time"
+	"fmt"
 )
 
 // Below are the structs
@@ -21,13 +23,15 @@ type Mechanic struct{
 }
 
 type Log struct{
-        Id         int
-        CarId      int
-        MechanicId int
-        Problem    string
-        Solution   string
-        Date       time.Time
-        NextDate   time.Time //The date of the next appointment
+        Id          int
+        CarId       int
+        CarStr      string
+	MechanicId  int
+	MechanicStr string
+        Problem     string
+        Solution    string
+        Date        time.Time
+        NextDate    time.Time
 }
 
 type Car struct{
@@ -411,15 +415,15 @@ func DeleteAllData(db *sql.DB){
 
 // Below is the interface to manage the items.
 type Crud interface{
-        AddItems()
-   //     ReadAllItems()
+        //AddItems()	    //ya no funciona porque regresa tipos diferentes
+        //ReadAllItems()  //No funciona porque no requiere de un receiver
+	//SearchItems()   //ya no funciona porque regresa tipos diferentes
         UpdateItems()
-	SearchItems()
         DeleteItems()
 }
 
 //Cars Methods
-func (c Car) AddItems(db *sql.DB){
+func (c Car) AddItems(db *sql.DB) Car{
 	sqlAddItem := `
         INSERT INTO Cars(
 		MakeId,
@@ -432,8 +436,15 @@ func (c Car) AddItems(db *sql.DB){
 	checkErr(err)
         defer stmt.Close()
 
-        _, err = stmt.Exec(c.ModelId,c.ModelId,c.Year,c.StyleId)
+        res, err := stmt.Exec(c.ModelId,c.ModelId,c.Year,c.StyleId)
 	checkErr(err)
+
+	id, err := res.LastInsertId()
+	checkErr(err)
+	c.Id = int(id)
+
+	fmt.Println("Item added")
+	return c
 }
 
 func (c Car) SearchItems(db *sql.DB) []Car{ //Search only for the ones of the same model
@@ -559,6 +570,7 @@ func (m Mechanic) UpdateItems(db *sql.DB){
 	if row < 1{
 		panic("No rows affected")
 	}
+	fmt.Println("Item updated")
 }
 
 func (m Mechanic) DeleteItems(db *sql.DB){
@@ -578,11 +590,12 @@ func (m Mechanic) DeleteItems(db *sql.DB){
 	if row < 1 {
 		panic("No rows affected")
 	}
+	fmt.Println("Item deleted.")
 }
 
 
 //Log methods
-func (l Log) AddItems(db *sql.DB){
+func (l Log) AddItems(db *sql.DB) Log{
 	sqlAddItem := `
         INSERT OR REPLACE INTO Log(
 		CarId,
@@ -597,27 +610,82 @@ func (l Log) AddItems(db *sql.DB){
 	checkErr(err)
         defer stmt.Close()
 
-        _, err = stmt.Exec(l.CarId, l.MechanicId, l.Problem, l.Solution, l.Date, l.NextDate)
+        res, err := stmt.Exec(l.CarId, l.MechanicId, l.Problem, l.Solution, l.Date, l.NextDate)
 	checkErr(err)
+
+	id, err := res.LastInsertId()
+	checkErr(err)
+	l.Id = int(id)
+
+	fmt.Println("Item Added")
+	return l
 }
 
-/* AddDate(<año>,<mes>,<dia>)
-today := time.Now()
-fmt.Println(today)
-oneMonth := today.AddDate(0,1,0) 
-fmt.Println(oneMonth)
-*/
+
+//Check the select because now is not working...
+func (l Log) SearchItems(db *sql.DB) []Log{
+	fmt.Println("log antes de select",l)
+	sqlReadAll := `
+	SELECT l.Id, l.CarId, mo.Model, l.MechanicId, me.WorkshopName, l.Problem, l.Solution, l.Date, l.NextDate
+	FROM Log as l, Model as mo, Mechanic as me, Cars as c
+	WHERE l.Id = ?
+	AND l.CarId = c.Id
+	AND c.ModelId = mo.Id
+	AND l.MechanicId = me.Id`
+
+	rows, err := db.Query(sqlReadAll, l.Id)
+	checkErr(err)
+	defer rows.Close()
+
+	var result []Log
+	for rows.Next() {
+		var log Log
+		err := rows.Scan(&log.Id, &log.CarId, &log.CarStr, &log.MechanicId, &log.MechanicStr, &log.Problem, &log.Solution, &log.Date, &log.NextDate)
+		checkErr(err)
+		result = append(result, log)
+	}
+	return result
+}
 
 func (l Log) UpdateItems(db *sql.DB){
+	sqlUpdateItem := `
+	UPDATE Log
+	SET Problem = ?, Solution = ?, Date = ?, NextDate = ?
+	WHERE Id = ?`
 
-}
+	stmt, err := db.Prepare(sqlUpdateItem)
+	checkErr(err)
+	defer stmt.Close()
 
-func (l Log) SearchItems(db *sql.DB){
+	resp, err := stmt.Exec(l.Problem, l.Solution, l.Date, l.NextDate, l.Id)
+	checkErr(err)
 
+	row, err := resp.RowsAffected()
+	checkErr(err)
+	if row < 1{
+		panic("No rows affected")
+	}
+	fmt.Println("Item updated")
 }
 
 func (l Log) DeleteItems(db *sql.DB){
+	sqlDelItem :=`
+	Delete from Log 
+	WHERE Id = ?`
 
+	stmt, err := db.Prepare(sqlDelItem)
+	checkErr(err)
+	defer stmt.Close()
+
+	resp, err := stmt.Exec(l.Id)
+	checkErr(err)
+
+	row, err := resp.RowsAffected()
+	checkErr(err)
+	if row < 1 {
+		panic("No rows affected")
+	}
+	fmt.Println("Item Deleted.")
 }
 
 func ReadAllCars(db *sql.DB) []Car{ //read all items
@@ -662,48 +730,27 @@ func ReadAllMechanic(db *sql.DB) []Mechanic{
 		result = append(result, Me)
 	}
 	return result
-/*
-	sql_readall := `
-	SELECT Ma.Make, Mo.Model, C.Year, S.Style
-   	FROM Makes as Ma, Model as Mo, Cars as C, Styles as S
-   	WHERE C.MakeId = Ma.Id 
-   	AND C.ModelId = Mo.Id
-   	AND C.StyleId = S.Id`
-
-        rows, err := db.Query(sql_readall)
-	checkErr(err)
-        defer rows.Close()
-
-        for rows.Next() {
-                //var car Car
-                err := rows.Scan(&car., &user.Name, &user.Date)
-		checkErr(err)
-                result = append(result, user)
-        }
-        return result
-*/
 }
 
-func ReadAllLogs(db *sql.DB){
-/*
-	sql_readall := `
-	SELECT Ma.Make, Mo.Model, C.Year, S.Style
-   	FROM Makes as Ma, Model as Mo, Cars as C, Styles as S
-   	WHERE C.MakeId = Ma.Id 
-   	AND C.ModelId = Mo.Id
-   	AND C.StyleId = S.Id`
+func ReadAllLogs(db *sql.DB) []Log{
+	sqlReadAll := `
+	SELECT l.Id, l.CarId, mo.Model, l.MechanicId, me.WorkshopName, l.Problem, l.Solution, l.Date, l.NextDate
+	FROM Log as l, Model as mo, Mechanic as me, Cars as c
+	WHERE l.CarId = c.Id
+	AND c.ModelId = mo.Id
+	AND l.MechanicId = me.Id`
 
-        rows, err := db.Query(sql_readall)
+	rows, err := db.Query(sqlReadAll)
 	checkErr(err)
-        defer rows.Close()
+	defer rows.Close()
 
-        for rows.Next() {
-                //var car Car
-                err := rows.Scan(&car., &user.Name, &user.Date)
+	var result []Log
+	for rows.Next() {
+		var log Log
+		err := rows.Scan(&log.Id, &log.CarId, &log.CarStr, &log.MechanicId, &log.MechanicStr, &log.Problem, &log.Solution, &log.Date, &log.NextDate)
 		checkErr(err)
-                result = append(result, user)
-        }
-        return result
-*/
+		result = append(result, log)
+	}
+	return result
 }
 
