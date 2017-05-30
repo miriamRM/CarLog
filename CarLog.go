@@ -139,7 +139,7 @@ func main(){
 	//LOGS
 	//Add Logs to the database
 	date := time.Now()
-	//fmt.Println(date)
+	mail := "tsuki4u@gmail.com"
 
 	logVibe := DbHandle.Log{
 		CarId: 1,
@@ -149,7 +149,7 @@ func main(){
 		Date: date,
 		NextDate: date.AddDate(0,0,1),
 	}
-	logVibe = logVibe.AddItems(db)
+	logVibe = logVibe.AddItems(db, mail)
 //	fmt.Println("\n log in CarLog \n",logVibe)
 
 	logMalibu := DbHandle.Log{
@@ -159,7 +159,7 @@ func main(){
 		Solution: "Solution 1",
 		Date: date,
 	}
-	logMalibu = logMalibu.AddItems(db)
+	logMalibu = logMalibu.AddItems(db, mail)
 	//fmt.Println(logMalibu)
 
 	logs := DbHandle.ReadAllLogs(db)
@@ -169,7 +169,7 @@ func main(){
 	printLog(logs)
 
 	logMalibu.Problem = "Problem 101"
-	logMalibu.UpdateItems(db)
+	logMalibu.UpdateItems(db, mail)
 	//fmt.Println(logMalibu)
 
 	logVibe.DeleteItems(db)

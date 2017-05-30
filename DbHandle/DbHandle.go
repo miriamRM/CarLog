@@ -595,7 +595,7 @@ func (m Mechanic) DeleteItems(db *sql.DB){
 
 
 //Log methods
-func (l Log) AddItems(db *sql.DB) Log{
+func (l Log) AddItems(db *sql.DB, mail string) Log{
 	sqlAddItem := `
         INSERT OR REPLACE INTO Log(
 		CarId,
@@ -616,6 +616,10 @@ func (l Log) AddItems(db *sql.DB) Log{
 	id, err := res.LastInsertId()
 	checkErr(err)
 	l.Id = int(id)
+
+	if l.NextDate.IsZero() != true{
+		GmailAPI.CreateSendMail(mail)
+	}
 
 	fmt.Println("Item Added")
 	return l
@@ -647,7 +651,7 @@ func (l Log) SearchItems(db *sql.DB) []Log{
 	return result
 }
 
-func (l Log) UpdateItems(db *sql.DB){
+func (l Log) UpdateItems(db *sql.DB, mail string){
 	sqlUpdateItem := `
 	UPDATE Log
 	SET Problem = ?, Solution = ?, Date = ?, NextDate = ?
@@ -665,6 +669,11 @@ func (l Log) UpdateItems(db *sql.DB){
 	if row < 1{
 		panic("No rows affected")
 	}
+
+	if l.NextDate.IsZero() != true{
+		GmailAPI.CreateSendMail(mail)
+	}
+
 	fmt.Println("Item updated")
 }
 

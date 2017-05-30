@@ -92,7 +92,7 @@ func saveToken(file string, token *oauth2.Token) {
 
 // readsFile reads in the credentials
 func readFile() []byte{
-	b, err := ioutil.ReadFile("client_secret.json")
+	b, err := ioutil.ReadFile("clientSecretGmail.json")
         if err != nil {
                 log.Fatalf("Unable to read client secret file: %v", err)
         }
