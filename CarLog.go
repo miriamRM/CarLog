@@ -8,6 +8,7 @@ import(
 	"fmt"
 )
 
+//Functions to print the information
 func printCars(cars []DbHandle.Car){
 	fmt.Println("Id \t Make \t\t Model \t Year \t Style")
 	for _, c := range cars{
@@ -55,12 +56,6 @@ func main(){
 		StyleId: 5}
 	intrepid = intrepid.AddItems(db)
 
-	caravan := DbHandle.Car{
-		ModelId: 1,
-		Year: 1996,
-		StyleId: 4}
-	caravan = caravan.AddItems(db)
-
 	malibu := DbHandle.Car{
 		ModelId: 7,
 		Year: 2016,
@@ -75,10 +70,7 @@ func main(){
 	cars := vibe.SearchItems(db)
 	printCars(cars)
 
-	cars = caravan.SearchItems(db)
-	printCars(cars)
-
-	cars = malibu.SearchItems(db)
+	cars = intrepid.SearchItems(db)
 	printCars(cars)
 
 	//change the year of the car and update it on the database
@@ -105,7 +97,7 @@ func main(){
 		SpecialtyId: 1,
 		Address: "Avenida fulana #123 Col centro",
 		Phone: 1234567}
-	manuel.AddItems(db)
+	manuel = manuel.AddItems(db)
 
 	wero := DbHandle.Mechanic{
 		WorkshopName: "El Wero",
@@ -113,44 +105,46 @@ func main(){
 		SpecialtyId: 4,
 		Address: "Calle Alisos Col Piedras Negras",
 		Phone: 6462053540}
-	wero.AddItems(db)
+	wero = wero.AddItems(db)
 
+	//Get all the mechanics from the DB
 	allMech := DbHandle.ReadAllMechanic(db)
 	printMech(allMech)
 
+	//Search for a specific mechanic
 	mech := wero.SearchItems(db)
 	printMech(mech)
-	if len(mech) == 1{
-		wero = mech[0]
-	}
 
+	//Update the changes
 	wero.Address = "Calle Alisos #160 Col. Piedras Negras"
 	wero.UpdateItems(db)
 
+	//Check if the changes were made
 	mech = wero.SearchItems(db)
 	printMech(mech)
 
+	//Delete a mechanic
 	wero.DeleteItems(db)
 
+	//Get all the mechanics from the BD
 	allMech = DbHandle.ReadAllMechanic(db)
 	printMech(allMech)
 
 
 	//LOGS
-	//Add Logs to the database
 	date := time.Now()
 	mail := "tsuki4u@gmail.com"
 
+	//Add Logs to the database
 	logVibe := DbHandle.Log{
 		CarId: 1,
 		MechanicId: 1,
-		Problem: "Sigue goteando aceite y seguimos sin saber por donde cae la gota",
-		Solution: "Se le cambiaron los empaques de no se que cosa",
+		Problem: "Problema",
+		Solution: "Solucion",
 		Date: date,
 		NextDate: date.AddDate(0,0,1),
 	}
 	logVibe = logVibe.AddItems(db, mail)
-//	fmt.Println("\n log in CarLog \n",logVibe)
 
 	logMalibu := DbHandle.Log{
 		CarId: malibu.Id,
@@ -160,24 +154,27 @@ func main(){
 		Date: date,
 	}
 	logMalibu = logMalibu.AddItems(db, mail)
-	//fmt.Println(logMalibu)
 
+	//Get all the logs from the DB
 	logs := DbHandle.ReadAllLogs(db)
 	printLog(logs)
 
+	//Get an specific log
 	logs = logMalibu.SearchItems(db)
 	printLog(logs)
 
+	//Update an specific log
 	logMalibu.Problem = "Problem 101"
 	logMalibu.UpdateItems(db, mail)
-	//fmt.Println(logMalibu)
 
+	//Delete an specific log
 	logVibe.DeleteItems(db)
-	//fmt.Println(logVibe)
 
+	//Get all the logs from the DB
 	logs = DbHandle.ReadAllLogs(db)
 	printLog(logs)
 
-	//Delete all from tables.
+
+	//Delete all the information from tables.
 	DbHandle.DeleteAllData(db)
 }

@@ -5,7 +5,7 @@ package DbHandle
 import(
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
-	//"ProyCarLogs/GoogleAPIs/CalendarAPI"
+	"ProyCarLogs/GoogleAPIs/CalendarAPI"
 	"ProyCarLogs/GoogleAPIs/GmailAPI"
 	"time"
 	"fmt"
@@ -49,22 +49,6 @@ type Model struct{
 	Id	int
 	MakeId	int
 	Model	string
-}
-
-//I dont need these yet
-type Make struct{
-	Id	int
-	Make	string
-}
-
-type Style struct{
-	Id	int
-	Style	string
-}
-
-type Specialty struct{
-	Id	  int
-	Specialty string
 }
 
 func checkErr(err error){
@@ -424,30 +408,43 @@ type Crud interface{
 
 //Cars Methods
 func (c Car) AddItems(db *sql.DB) Car{
+	sqlGetMake := `
+	SELECT MakeId FROM Model WHERE Id = ?`
+
+        rows, err := db.Query(sqlGetMake, c.ModelId)
+	checkErr(err)
+	defer rows.Close()
+
+	var makeId int
+        for rows.Next() {
+                err := rows.Scan(&makeId)
+                checkErr(err)
+        }
+	c.MakeId = makeId
+
 	sqlAddItem := `
         INSERT INTO Cars(
 		MakeId,
                 ModelId,
                 Year,
 		StyleId
-        ) values((SELECT MakeId FROM Model WHERE Id = ?),?,?,?)`
+        ) values(?,?,?,?)`
 
         stmt, err := db.Prepare(sqlAddItem)
 	checkErr(err)
         defer stmt.Close()
 
-        res, err := stmt.Exec(c.ModelId,c.ModelId,c.Year,c.StyleId)
+        res, err := stmt.Exec(makeId,c.ModelId,c.Year,c.StyleId)
 	checkErr(err)
 
 	id, err := res.LastInsertId()
 	checkErr(err)
 	c.Id = int(id)
 
-	fmt.Println("Item added")
 	return c
 }
 
-func (c Car) SearchItems(db *sql.DB) []Car{ //Search only for the ones of the same model
+func (c Car) SearchItems(db *sql.DB) []Car{
 	sqlReadAll := `
 	SELECT C.Id, C.MakeId, Ma.Make, C.ModelId, Mo.Model, C.Year, C.StyleId, S.Style
    	FROM Makes as Ma, Model as Mo, Cars as C, Styles as S
@@ -511,7 +508,7 @@ func (c Car) DeleteItems(db *sql.DB){
 }
 
 //Mechanic methods
-func (m Mechanic) AddItems(db *sql.DB){
+func (m Mechanic) AddItems(db *sql.DB) Mechanic{
 	sqlAddItem := `
         INSERT INTO Mechanic(
 		WorkshopName,
@@ -525,8 +522,14 @@ func (m Mechanic) AddItems(db *sql.DB){
 	checkErr(err)
         defer stmt.Close()
 
-        _, err = stmt.Exec(m.WorkshopName, m.MechanicName, m.SpecialtyId, m.Address, m.Phone)
+        res, err := stmt.Exec(m.WorkshopName, m.MechanicName, m.SpecialtyId, m.Address, m.Phone)
 	checkErr(err)
+
+	id, err := res.LastInsertId()
+	checkErr(err)
+	m.Id = int(id)
+
+	return m
 }
 
 func (m Mechanic) SearchItems(db *sql.DB) []Mechanic{
@@ -555,8 +558,7 @@ func (m Mechanic) UpdateItems(db *sql.DB){
 	sqlUpdateItem := `
 	UPDATE Mechanic
 	SET WorkshopName = ?, MechanicName = ?, SpecialtyId = ?, Address = ?, Phone = ?
-	WHERE Id = ?
-`
+	WHERE Id = ?`
 
 	stmt, err := db.Prepare(sqlUpdateItem)
 	checkErr(err)
@@ -570,7 +572,6 @@ func (m Mechanic) UpdateItems(db *sql.DB){
 	if row < 1{
 		panic("No rows affected")
 	}
-	fmt.Println("Item updated")
 }
 
 func (m Mechanic) DeleteItems(db *sql.DB){
@@ -590,9 +591,7 @@ func (m Mechanic) DeleteItems(db *sql.DB){
 	if row < 1 {
 		panic("No rows affected")
 	}
-	fmt.Println("Item deleted.")
 }
-
 
 //Log methods
 func (l Log) AddItems(db *sql.DB, mail string) Log{
@@ -618,10 +617,9 @@ func (l Log) AddItems(db *sql.DB, mail string) Log{
 	l.Id = int(id)
 
 	if l.NextDate.IsZero() != true{
-		GmailAPI.CreateSendMail(mail)
+		CreateEventPlusMail(l, db, mail)
 	}
 
-	fmt.Println("Item Added")
 	return l
 }
 
@@ -671,10 +669,8 @@ func (l Log) UpdateItems(db *sql.DB, mail string){
 	}
 
 	if l.NextDate.IsZero() != true{
-		GmailAPI.CreateSendMail(mail)
+		CreateEventPlusMail(l, db, mail)
 	}
-
-	fmt.Println("Item updated")
 }
 
 func (l Log) DeleteItems(db *sql.DB){
@@ -694,7 +690,28 @@ func (l Log) DeleteItems(db *sql.DB){
 	if row < 1 {
 		panic("No rows affected")
 	}
-	fmt.Println("Item Deleted.")
+}
+
+func CreateEventPlusMail(l Log,db *sql.DB, mail string){
+	sqlGetWorkshop := `
+	SELECT me.WorkshopName
+	FROM Mechanic as me, Log as l
+	WHERE l.MechanicId = me.Id
+	AND l.Id = ?`
+
+	rows, err := db.Query(sqlGetWorkshop, l.Id)
+        checkErr(err)
+        defer rows.Close()
+
+        var mechanic string
+        for rows.Next() {
+                err := rows.Scan(&mechanic)
+                checkErr(err)
+        }
+
+	CalendarAPI.CreateEventCalendar(mechanic, l.Solution, l.NextDate)
+	GmailAPI.CreateSendMail(mail)
+
 }
 
 func ReadAllCars(db *sql.DB) []Car{ //read all items
