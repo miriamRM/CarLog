@@ -11,46 +11,6 @@ import(
 	"fmt"
 )
 
-// Below are the structs
-type Mechanic struct{
-        Id           int
-        WorkshopName string
-        MechanicName string
-        SpecialtyId  int
-        SpecialtyStr string
-	Address      string
-        Phone        int
-}
-
-type Log struct{
-        Id          int
-        CarId       int
-        CarStr      string
-	MechanicId  int
-	MechanicStr string
-        Problem     string
-        Solution    string
-        Date        time.Time
-        NextDate    time.Time
-}
-
-type Car struct{
-        Id        int
-        MakeId    int
-	MakeStr   string
-        ModelId   int
-	ModelStr  string
-        Year      int
-        StyleId   int
-	StyleStr  string
-}
-
-type Model struct{
-	Id	int
-	MakeId	int
-	Model	string
-}
-
 func checkErr(err error){
 	if err != nil{
 		panic(err)
@@ -201,6 +161,12 @@ func FillMakesTable(db *sql.DB){
 		_, err = stmt.Exec(m)
 		checkErr(err)
 	}
+}
+
+type Model struct{
+	Id	int
+	MakeId	int
+	Model	string
 }
 
 func FillModelTable(db *sql.DB){
@@ -399,11 +365,23 @@ func DeleteAllData(db *sql.DB){
 
 // Below is the interface to manage the items.
 type Crud interface{
-        //AddItems()	    //ya no funciona porque regresa tipos diferentes
-        //ReadAllItems()  //No funciona porque no requiere de un receiver
-	//SearchItems()   //ya no funciona porque regresa tipos diferentes
-        UpdateItems()
-        DeleteItems()
+        //AddItems(*sql.DB)      //No funciona porque regresa tipos diferentes
+        //ReadAllItems(*sql.DB) //No funciona porque no requiere de un receiver
+	//SearchItems(*sql.DB)  //No funciona porque regresa tipos diferentes
+        UpdateItems(*sql.DB)
+        DeleteItems(*sql.DB)
+}
+
+//Car Struct
+type Car struct{
+        Id        int
+        MakeId    int
+	MakeStr   string
+        ModelId   int
+	ModelStr  string
+        Year      int
+        StyleId   int
+	StyleStr  string
 }
 
 //Cars Methods
@@ -507,7 +485,41 @@ func (c Car) DeleteItems(db *sql.DB){
 	}
 }
 
-//Mechanic methods
+func ReadAllCars(db *sql.DB) []Car{ //read all items
+	sqlReadAll := `
+	SELECT C.Id, C.MakeId, Ma.Make, C.ModelId, Mo.Model, C.Year, C.StyleId, S.Style
+   	FROM Makes as Ma, Model as Mo, Cars as C, Styles as S
+   	WHERE C.MakeId = Ma.Id 
+   	AND C.ModelId = Mo.Id
+   	AND C.StyleId = S.Id 
+	ORDER BY C.Id ASC`
+
+	rows, err := db.Query(sqlReadAll)
+	checkErr(err)
+	defer rows.Close()
+
+	var result []Car
+	for rows.Next() {
+		var car Car
+		err := rows.Scan(&car.Id, &car.MakeId, &car.MakeStr, &car.ModelId, &car.ModelStr, &car.Year, &car.StyleId, &car.StyleStr)
+		checkErr(err)
+		result = append(result, car)
+	}
+	return result
+}
+
+//Mechanic Struct
+type Mechanic struct{
+        Id           int
+        WorkshopName string
+        MechanicName string
+        SpecialtyId  int
+        SpecialtyStr string
+	Address      string
+        Phone        int
+}
+
+//Mechanic Methods
 func (m Mechanic) AddItems(db *sql.DB) Mechanic{
 	sqlAddItem := `
         INSERT INTO Mechanic(
@@ -593,7 +605,41 @@ func (m Mechanic) DeleteItems(db *sql.DB){
 	}
 }
 
-//Log methods
+func ReadAllMechanic(db *sql.DB) []Mechanic{
+	sqlReadAll := `
+	SELECT Me.Id, Me.WorkshopName, Me.MechanicName, Me.SpecialtyId, Sp.Specialty, Me.Address, Me.Phone 
+   	FROM Mechanic as Me, Specialty as Sp
+   	WHERE Me.SpecialtyId = Sp.Id 
+	ORDER BY Me.Id ASC`
+
+	rows, err := db.Query(sqlReadAll)
+	checkErr(err)
+	defer rows.Close()
+
+	var result []Mechanic
+	for rows.Next() {
+		var Me Mechanic
+		err := rows.Scan(&Me.Id, &Me.WorkshopName, &Me.MechanicName, &Me.SpecialtyId, &Me.SpecialtyStr, &Me.Address, &Me.Phone)
+		checkErr(err)
+		result = append(result, Me)
+	}
+	return result
+}
+
+//Log Struct
+type Log struct{
+        Id          int
+        CarId       int
+        CarStr      string
+	MechanicId  int
+	MechanicStr string
+        Problem     string
+        Solution    string
+        Date        time.Time
+        NextDate    time.Time
+}
+
+//Log Methods
 func (l Log) AddItems(db *sql.DB, mail string) Log{
 	sqlAddItem := `
         INSERT OR REPLACE INTO Log(
@@ -624,7 +670,6 @@ func (l Log) AddItems(db *sql.DB, mail string) Log{
 }
 
 
-//Check the select because now is not working...
 func (l Log) SearchItems(db *sql.DB) []Log{
 	fmt.Println("log antes de select",l)
 	sqlReadAll := `
@@ -712,50 +757,6 @@ func CreateEventPlusMail(l Log,db *sql.DB, mail string){
 	CalendarAPI.CreateEventCalendar(mechanic, l.Solution, l.NextDate)
 	GmailAPI.CreateSendMail(mail)
 
-}
-
-func ReadAllCars(db *sql.DB) []Car{ //read all items
-	sqlReadAll := `
-	SELECT C.Id, C.MakeId, Ma.Make, C.ModelId, Mo.Model, C.Year, C.StyleId, S.Style
-   	FROM Makes as Ma, Model as Mo, Cars as C, Styles as S
-   	WHERE C.MakeId = Ma.Id 
-   	AND C.ModelId = Mo.Id
-   	AND C.StyleId = S.Id 
-	ORDER BY C.Id ASC`
-
-	rows, err := db.Query(sqlReadAll)
-	checkErr(err)
-	defer rows.Close()
-
-	var result []Car
-	for rows.Next() {
-		var car Car
-		err := rows.Scan(&car.Id, &car.MakeId, &car.MakeStr, &car.ModelId, &car.ModelStr, &car.Year, &car.StyleId, &car.StyleStr)
-		checkErr(err)
-		result = append(result, car)
-	}
-	return result
-}
-
-func ReadAllMechanic(db *sql.DB) []Mechanic{
-	sqlReadAll := `
-	SELECT Me.Id, Me.WorkshopName, Me.MechanicName, Me.SpecialtyId, Sp.Specialty, Me.Address, Me.Phone 
-   	FROM Mechanic as Me, Specialty as Sp
-   	WHERE Me.SpecialtyId = Sp.Id 
-	ORDER BY Me.Id ASC`
-
-	rows, err := db.Query(sqlReadAll)
-	checkErr(err)
-	defer rows.Close()
-
-	var result []Mechanic
-	for rows.Next() {
-		var Me Mechanic
-		err := rows.Scan(&Me.Id, &Me.WorkshopName, &Me.MechanicName, &Me.SpecialtyId, &Me.SpecialtyStr, &Me.Address, &Me.Phone)
-		checkErr(err)
-		result = append(result, Me)
-	}
-	return result
 }
 
 func ReadAllLogs(db *sql.DB) []Log{
